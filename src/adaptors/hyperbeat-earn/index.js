@@ -46,8 +46,11 @@ const getPricerParams = async (pricer, block) => {
 // accrual. Annualise over the time between the two rate updates instead of
 // over the window length.
 const annualize = (now, prior) => {
+  if (!(now.rate > 0) || !(prior.rate > 0)) return null;
   const elapsed = now.updatedAt - prior.updatedAt;
-  if (elapsed <= 0 || prior.rate <= 0) return null;
+  // no rate update inside the lookback window: holders realised no yield
+  if (elapsed === 0 && now.rate === prior.rate) return 0;
+  if (elapsed <= 0) return null;
   return ((now.rate / prior.rate) ** (YEAR / elapsed) - 1) * 100;
 };
 
